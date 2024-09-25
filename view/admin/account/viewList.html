@@ -57,7 +57,7 @@
 
             {volist name="slice_is_close" id="v3"}
             <tr>
-                <td data-pk_id="{$v3.pk_id}">{$v3.pk_id}</td>
+                <td data-pk_id="{$v3.pk_id}">{$v3.pk_id|substr=0,8}</td>
                 <td>{$v3.name}</td>
                 <td>{$v3.code}</td>
                 <td>{in name="v3.buy_or_sell" value="sell"}空{else/}多{/in}</td>
