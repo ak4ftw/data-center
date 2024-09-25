@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>账户</title>
+
+    <script src="/static/css/main.css"></script>
+    <script src="/static/ec/echarts.min.js"></script>
+</head>
+<body>
+
+{include file="public/navigation" /}
+
+<div>
+    <h2>账号</h2>
+    <p>修改账号名称</p>
+</div>
+
+<div class="container-fluid">
+    <div>
+        <p>
+            <span class="title">账号: </span><b class="value">{$account.account}</b>
+            <span class="title">账号名称: </span><b class="value">{$account.account_name}</b>
+        </p>
+    </div>
+
+    <div>
+        <form action="/admin/account/updateAccountName" method="post">
+            <input type="hidden" name="account" value="{$account.account}"/>
+            <p><span>新账号名称</span> <input type="text" name="account_name" value="{$account.account_name}"/></p>
+            <p><button type="submit">提交</button></p>
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>

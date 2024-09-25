@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>设置</title>
+
+    <script src="/static/css/main.css"></script>
+</head>
+<body>
+
+{include file="public/navigation" /}
+
+<div>
+    <h2>账号</h2>
+</div>
+
+<div class="container-fluid">
+    <div>
+        {volist name="account" id="v"}
+        <p>
+            <span class="title">账号: </span><b class="value">{$v.account}</b>
+            <span class="title">账号名称: </span><b class="value">{$v.account_name}</b>
+            <span class="title">初始化账号金额: </span><b class="value">{$v.balance}</b>
+            <span class="title">模式: </span><b class="value">固定多空手数量 单方向最多15份</b>
+            <span class="title">持仓: </span><b class="value">总持仓份数(包含多空) {$v.slice_num_now}</b>
+            <a href="/admin/account/view?account={$v.account}">查看详细</a>
+            <a href="/admin/account/updateAccountName?account={$v.account}">修改账号名称</a>
+            <a href="/admin/account/updateMember?account={$v.account}">设置观察用户</a>
+            <a href="/admin/account/viewList?account={$v.account}">下载表格数据</a>
+        </p>
+        {/volist}
+    </div>
+</div>
+
+</body>
+</html>

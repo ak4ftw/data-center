@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>账号</title>
+
+    <script src="/static/css/main.css"></script>
+    <script src="/static/ec/echarts.min.js"></script>
+</head>
+<body>
+
+{include file="public/navigation" /}
+
+<div>
+    <h2>账号</h2>
+</div>
+
+<div class="container-fluid">
+    <div>
+        <p>
+            <span class="title">账号名称: </span><b class="value">{$account.account}</b>
+            <span class="title">账号: </span><b class="value">{$account.account_name}</b>
+            <span class="title">初始化账号金额: </span><b class="value">{$account.balance}</b>
+            <span class="title">模式: </span><b class="value">固定每份手数{$slice_open_num}手</b>
+<!--            <span class="title">分仓金额: </span><b class="value">{$account.slice_margin}</b>-->
+            <span class="title">持仓: </span><b class="value">{$account.slice_num_now} / {$slice_num}</b>
+        </p>
+    </div>
+
+    <div style="margin-left: 30px">
+        <h3>{$account.account} 持仓</h3>
+        <table>
+            <tr>
+                <th>id</th>
+                <th>名称</th>
+                <th>code</th>
+                <th>方向</th>
+                <th>开仓价格</th>
+                <th>数量</th>
+                <th>开仓日期</th>
+                <th>开仓手续费</th>
+                <th>操作</th>
+            </tr>
+
+            {volist name="slice" id="v2"}
+            <tr>
+                <td data-pk_id="{$v2.pk_id}">{$v2.pk_id|substr=0,8}</td>
+                <td>{$v2.name}</td>
+                <td>{$v2.code}</td>
+                <td>{$v2.buy_or_sell}</td>
+                <td>{$v2.open_price}</td>
+                <td>{$v2.volume}</td>
+                <td>{$v2.create_date}</td>
+                <td>{$v2.open_charge}</td>
+                <td>
+                    <a href="/admin/account/updateCloseSlice?slice_id={$v2.pk_id}">手动平仓</a>
+                </td>
+            </tr>
+            {/volist}
+        </table>
+    </div>
+
+    <div style="margin-left: 30px">
+        <h3>{$account.account} 平仓记录</h3>
+        <p>1. 手续费计算时候，期货公司或交易软件会在每手附加0.1，当前没计算在内。 例：理论计算6.12元每手手续费，实际收取约是6.22</p>
+        <table>
+            <tr>
+                <th>id</th>
+                <th>名称</th>
+                <th>code</th>
+                <th>方向</th>
+                <th>数量</th>
+                <th>开仓价格</th>
+                <th>开仓日期</th>
+                <th>开仓手续费</th>
+                <th>平仓价格</th>
+                <th>平仓手续费</th>
+                <th>平仓日期</th>
+                <th>
+                    开多盈利计算方式 ((平仓价格 - 开仓价格) * 10 - 开仓手续费 - 平仓手续费) * 手数 = <br/>
+                    开空盈利计算方式 ((开仓价格 - 平仓价格) * 10 - 开仓手续费 - 平仓手续费) * 手数 =
+                </th>
+                <th>盈利</th>
+            </tr>
+
+            {volist name="slice_is_close" id="v3"}
+            <tr>
+                <td data-pk_id="{$v3.pk_id}">{$v3.pk_id|substr=0,8}</td>
+                <td>{$v3.name}</td>
+                <td>{$v3.code}</td>
+                <td>{$v3.buy_or_sell}</td>
+                <td>{$v3.volume}</td>
+                <td>{$v3.open_price}</td>
+                <td>{$v3.create_date}</td>
+                <td>{$v3.open_charge}</td>
+                <td>{$v3.close_price}</td>
+                <td>{$v3.close_charge}</td>
+                <td>{$v3.close_date}</td>
+                <td>
+                    {eq name="v3.buy_or_sell" value="buy"}(({$v3.close_price} - {$v3.open_price}) * 10 - {$v3.open_charge} - {$v3.close_charge}) * {$v3.volume}{/eq}
+                    {eq name="v3.buy_or_sell" value="sell"}(({$v3.open_price} - {$v3.close_price}) * 10 - {$v3.open_charge} - {$v3.close_charge}) * {$v3.volume}{/eq}
+                </td>
+                <td>{$v3.slice_profit_num}</td>
+            </tr>
+            {/volist}
+        </table>
+    </div>
+
+    <div>
+        <h2>分仓理论每日收益图表:</h2>
+        <div id="data_display1" style="height: 800px; width: 100%"></div>
+    </div>
+
+    <div>
+        <h2>每日收益图:</h2>
+        <div id="data_display3" style="height: 800px; width: 100%"></div>
+    </div>
+
+    <div>
+        <h2>账号每日动态权益变化:</h2>
+        <div id="data_display2" style="height: 800px; width: 100%"></div>
+    </div>
+
+</div>
+
+<script>
+
+    // 理论收益展示板
+    var data1 = {
+        "total_profit": [
+            {foreach $month_day_profit.total_profit as $key1=>$value1 }
+            {"trade_date": "{$key1}","profit_price": {$value1},},
+            {/foreach}
+        ],
+        "day_profit": [
+            {foreach $month_day_profit.day_profit as $key2=>$value2 }
+            {"trade_date": "{$key2}","profit_price": {$value2},},
+            {/foreach}
+        ],
+        "total_profit_price": {$month_day_profit.total_profit_price}
+    };
+    dataDisplay1(data1);
+    function dataDisplay1(data){
+
+        // 从数据中提取日期、最大结算、最小结算和结算范围
+        const dates = data.total_profit.map(item => item.trade_date);
+        const totalProfit = data.total_profit.map(item => Number(Math.floor(item.profit_price * 100) / 100));
+        const dayProfit = data.day_profit.map(item => Number(Math.floor(item.profit_price * 100) / 100));
+
+
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('data_display1'));
+
+        // 指定图表的配置项和数据
+        var option = {
+            title: {
+                text: '分仓模式下每日理论收益，当前月总收益 ' + Math.floor(data.total_profit_price * 100) / 100
+            },
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: {
+                data: ['总收益', '日收益', ]
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            toolbox: {
+                feature: {
+                    saveAsImage: {}
+                }
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: dates
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [
+                {
+                    name: '总收益',
+                    type: 'line',
+                    data: totalProfit,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        valueAnimation: true
+                    }
+                },
+                {
+                    name: '日收益',
+                    type: 'bar',
+                    data: dayProfit,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        valueAnimation: true
+                    }
+                },
+            ]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+    }
+
+
+    // 理论收益展示板
+    var data2 = {
+        "total_client_equity": [
+            {foreach $client_equity as $key1=>$value1}
+            {
+                "trade_date": "{$value1.date}",
+                "client_equity": {$value1.client_equity},
+                "limit_init_profit": {$value1.limit_init_profit},
+                "limit_init_profit_rate": {$value1.limit_init_profit_rate},
+            },
+            {/foreach}
+        ],
+    };
+    dataDisplay2(data2);
+    function dataDisplay2(data){
+
+        // 从数据中提取日期、最大结算、最小结算和结算范围
+        const dates = data.total_client_equity.map(item => item.trade_date);
+        const serise1 = data.total_client_equity.map(item => item.client_equity);
+        const serise2 = data.total_client_equity.map(item => item.limit_init_profit);
+        const serise3 = data.total_client_equity.map(item => item.limit_init_profit_rate);
+
+
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('data_display2'));
+
+        // 指定图表的配置项和数据
+        var option = {
+            title: {
+                text: '动态权益每日变化。 初始金额: {$account.balance}'
+            },
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: {
+                data: ['动态权益', '权益变动', '权益变动百分比']
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            toolbox: {
+                feature: {
+                    saveAsImage: {}
+                }
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: dates
+            },
+            yAxis: [
+                {
+                    type: 'value',
+                    name: '金额'
+                },
+                {
+                    type: 'value',
+                    name: '百分比',
+                    position: 'right',
+                    axisLabel: {
+                        formatter: function (value) {
+                            return (value * 100).toFixed(2) + '%';
+                        }
+                    }
+                }
+            ],
+            series: [
+                {
+                    name: '动态权益',
+                    type: 'line',
+                    data: serise1,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        valueAnimation: true
+                    }
+                },
+                {
+                    name: '权益变动',
+                    type: 'bar',
+                    data: serise2,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        valueAnimation: true
+                    }
+                },
+                {
+                    name: '权益变动百分比',
+                    type: 'line',
+                    data: serise3,
+                    yAxisIndex: 1,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        valueAnimation: true,
+                        formatter: function (params) {
+                            return (params.value * 100).toFixed(2) + '%';
+                        }
+                    }
+                },
+            ]
+        };
+
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+    }
+
+
+    // 理论收益展示板
+    var data3 = {
+        "total_profit": [
+            {foreach $slice_close_list_day as $key1=>$value1 }
+            {"trade_date": "{$value1.close_day}","profit_price": {$value1.total},},
+            {/foreach}
+        ],
+        "day_profit": [
+            {foreach $slice_close_list_day as $key2=>$value2 }
+            {"trade_date": "{$value2.close_day}","profit_price": {$value2.day_profit},},
+            {/foreach}
+        ],
+    };
+    dataDisplay3(data3);
+    function dataDisplay3(data){
+
+        // 从数据中提取日期、最大结算、最小结算和结算范围
+        const dates = data.total_profit.map(item => item.trade_date);
+        const totalProfit = data.total_profit.map(item => Number(Math.floor(item.profit_price * 100) / 100));
+        const dayProfit = data.day_profit.map(item => Number(Math.floor(item.profit_price * 100) / 100));
+
+
+        // 基于准备好的dom，初始化echarts实例
+        var myChart = echarts.init(document.getElementById('data_display3'));
+
+        // 指定图表的配置项和数据
+        var option = {
+            title: {
+                text: '每日收益'
+            },
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: {
+                data: ['总收益', '日收益', ]
+            },
+            grid: {
+                left: '3%',
+                right: '4%',
+                bottom: '3%',
+                containLabel: true
+            },
+            toolbox: {
+                feature: {
+                    saveAsImage: {}
+                }
+            },
+            xAxis: {
+                type: 'category',
+                boundaryGap: false,
+                data: dates
+            },
+            yAxis: {
+                type: 'value'
+            },
+            series: [
+                {
+                    name: '总收益',
+                    type: 'line',
+                    data: totalProfit,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        valueAnimation: true
+                    }
+                },
+                {
+                    name: '日收益',
+                    type: 'bar',
+                    data: dayProfit,
+                    label: {
+                        show: true,
+                        position: 'top',
+                        valueAnimation: true
+                    }
+                },
+            ]
+        };
+
+        // 使用刚指定的配置项和数据显示图表。
+        myChart.setOption(option);
+    }
+</script>
+</body>
+</html>

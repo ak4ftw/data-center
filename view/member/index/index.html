@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>用户</title>
+
+    <script src="/static/css/main.css"></script>
+    <script src="/static/ec/echarts.min.js"></script>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div>
+        <span><a href="/member">首页</a></span>
+        <span><a href="/member/index/logout">登出</a></span>
+    </div>
+</div>
+
+<div>
+    <h2>首页</h2>
+</div>
+
+<div class="container-fluid">
+
+    <div>
+        <h3>{$account.account} 账号信息</h3>
+        <p>
+            <span class="title">账号: </span><b class="value">{$account.account}</b>
+            <span class="title">账号名称: </span><b class="value">{$account.account_name}</b>
+            <span class="title">初始化账号金额: </span><b class="value">{$account.balance}</b>
+        </p>
+    </div>
+
+
+    <div style="margin-left: 30px">
+        <h3>{$account.account} 盈利记录</h3>
+        <table >
+            <tr>
+                <th>id</th>
+                <th>盈利日期</th>
+                <th>盈利</th>
+            </tr>
+
+            {volist name="slice_is_close" id="v3"}
+            <tr>
+                <td data-pk_id="{$v3.pk_id}">{$v3.pk_id}</td>
+                <td>{$v3.close_date}</td>
+                <td>{$v3.slice_profit_num}</td>
+            </tr>
+            {/volist}
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>

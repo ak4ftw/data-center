@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+    <style>
+        .container{
+            margin: 10px;
+        }
+        .container table{}
+        .container table td{ padding: 10px;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>用户登录</h1>
+    <form action="./login" method="post">
+        用户名: <input type="text" name="username" id="username" /> <br>
+        密码: <input type="password" name="password" id=password" /> <br>
+        验证码: <input type="text" name="captcha_code" id=captcha_code" /> <br>
+        <div><img src="{:url('index/loginVerify')}" alt="captcha" /></div>
+        <button type="submit">登录</button>
+    </form>
+
+</div>
+
+</body>
+</html>

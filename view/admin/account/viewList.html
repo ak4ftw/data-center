@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>账户</title>
+
+    <script src="/static/css/main.css"></script>
+    <script src="/static/ec/echarts.min.js"></script>
+</head>
+<body>
+
+{include file="public/navigation" /}
+
+<div>
+    <h2>账户</h2>
+</div>
+
+<div class="container-fluid">
+    <div>
+        <p>
+            <span class="title">账户名称: </span><b class="value">{$account.account}</b>
+            <span class="title">账号: </span><b class="value">{$account.account_name}</b>
+            <span class="title">初始化账号金额: </span><b class="value">{$account.balance}</b>
+            <span class="title">模式: </span><b class="value">固定每份手数{$slice_open_num}手</b>
+<!--            <span class="title">分仓金额: </span><b class="value">{$account.slice_margin}</b>-->
+            <span class="title">持仓: </span><b class="value">{$account.slice_num_now} / {$slice_num}</b>
+        </p>
+    </div>
+
+    <div style="margin-left: 30px">
+        <h3>{$account.account} 完整记录</h3>
+        <p><a href="/admin/account/download?account={$account.account}">下载csv表格格式</a></p>
+        <p><a href="/admin/account/download20240921?account={$account.account}">下载csv表格格式 20240921</a></p>
+        <p>1. 手续费计算时候，期货公司或交易软件会在每手附加0.1，当前没计算在内。 例：理论计算6.12元每手手续费，实际收取约是6.22</p>
+        <table>
+            <tr>
+                <th>id</th>
+                <th>名称</th>
+                <th>code</th>
+                <th>方向</th>
+                <th>数量</th>
+                <th>开仓价格</th>
+                <th>开仓日期</th>
+                <th>开仓手续费</th>
+                <th>平仓价格</th>
+                <th>平仓手续费</th>
+                <th>平仓日期</th>
+                <th>今开</th>
+                <th>今平</th>
+                <th>持有</th>
+                <th>
+                    开多盈利计算方式 ((平仓价格 - 开仓价格) * 10 - 开仓手续费 - 平仓手续费) * 手数 = <br/>
+                    开空盈利计算方式 ((开仓价格 - 平仓价格) * 10 - 开仓手续费 - 平仓手续费) * 手数 =
+                </th>
+                <th>盈利</th>
+            </tr>
+
+            {volist name="slice_is_close" id="v3"}
+            <tr>
+                <td data-pk_id="{$v3.pk_id}">{$v3.pk_id}</td>
+                <td>{$v3.name}</td>
+                <td>{$v3.code}</td>
+                <td>{in name="v3.buy_or_sell" value="sell"}空{else/}多{/in}</td>
+                <td>{$v3.volume}</td>
+                <td>{$v3.open_price}</td>
+                <td>{$v3.create_date|dateTimeToDate}</td>
+                <td>{$v3.open_charge}</td>
+                <td>{in name="v3.is_close" value="0"}-{else/}{$v3.close_price}{/in}</td>
+                <td>{in name="v3.is_close" value="0"}-{else/}{$v3.close_charge}{/in}</td>
+                <td>{$v3.close_date|dateTimeToDate}</td>
+                <td>{$v3.slice_today.open_volume}</td>
+                <td>{$v3.slice_today.close_volume}</td>
+                <td>{$v3.slice_today.hold_volume}</td>
+                <td>
+                    {in name="v3.is_close" value="0"}
+                        -
+                    {else/}
+                        {eq name="v3.buy_or_sell" value="buy"}(({$v3.close_price} - {$v3.open_price}) * 10 - {$v3.open_charge} - {$v3.close_charge}) * {$v3.volume}{/eq}
+                        {eq name="v3.buy_or_sell" value="sell"}(({$v3.open_price} - {$v3.close_price}) * 10 - {$v3.open_charge} - {$v3.close_charge}) * {$v3.volume}{/eq}
+                    {/in}
+                </td>
+                <td>
+                    {in name="v3.is_close" value="0"}
+                        -
+                    {else/}
+                        {$v3.slice_profit_num}
+                    {/in}
+                </td>
+            </tr>
+            {/volist}
+        </table>
+    </div>
+
+</div>
+
+</body>
+</html>

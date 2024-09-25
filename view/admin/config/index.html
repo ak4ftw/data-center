@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>设置</title>
+
+    <script src="/static/css/main.css"></script>
+</head>
+<body>
+
+{include file="public/navigation" /}
+
+<div>
+    <h2>配置</h2>
+</div>
+
+<div class="container-fluid">
+    <div>
+
+        <form action="/config/update" method="post">
+            {volist name="kv" id="v"}
+            <p>
+                <span data-key="{$v.key}">{$v.name}:</span>
+                <input
+                    {in name="v.key" value="send_email_password"}
+                        type="password"
+                    {else/}
+                        type="text"
+                    {/in}
+
+                    name="{$v.key}"
+                    id="{$v.key}"
+                    value="{$v.value}"
+                />
+                <span>{$v.description}</span>
+            </p>
+            {/volist}
+            <button type="submit" >保存</button>
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>

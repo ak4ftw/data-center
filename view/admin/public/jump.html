@@ -1,0 +1,32 @@
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{$title}</title>
+</head>
+<body>
+<h1>{$msg}</h1>
+<p>页面将在 <span id="countdown">5</span> 秒后跳转...</p>
+
+<script>
+    // 设置倒计时的初始时间（秒）
+    var timeLeft = {$sec};
+
+    // 获取显示倒计时的元素
+    var countdownElement = document.getElementById('countdown');
+
+    // 每隔一秒更新倒计时
+    var countdownTimer = setInterval(function() {
+        timeLeft--; // 倒计时减一
+        countdownElement.textContent = timeLeft; // 更新页面显示
+
+        // 当倒计时结束时，停止倒计时并跳转页面
+        if (timeLeft <= 0) {
+            clearInterval(countdownTimer);
+            window.location.href = "{$to_url}"; // 替换为你想跳转的页面
+        }
+    }, 1000);
+</script>
+
+</body>
+</html>

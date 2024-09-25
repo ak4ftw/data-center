@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>账户</title>
+
+    <script src="/static/css/main.css"></script>
+    <script src="/static/ec/echarts.min.js"></script>
+</head>
+<body>
+
+{include file="public/navigation" /}
+
+<div>
+    <h2>账户</h2>
+    <p>手动平仓用于移仓，主力合约换月时平仓，记录价格，不会真的操作账号持仓。</p>
+</div>
+
+<div class="container-fluid">
+    <div>
+        <p>
+            <span class="title">账户名称: </span><b class="value">{$account.account}</b>
+            <span class="title">账号: </span><b class="value">{$account.account_name}</b>
+        </p>
+    </div>
+
+    <div>
+        <form action="/admin/account/updateCloseSlice" method="post">
+            <input type="hidden" name="slice_id" value="{$slice.pk_id}"/>
+            <p><span>id</span> <input type="text" value="{$slice.pk_id}" disabled/></p>
+            <p><span>平仓价格</span> <input type="number" name="close_price" value="0"/></p>
+            <p><button type="submit">提交</button></p>
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>
