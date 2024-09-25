@@ -37,15 +37,25 @@ class Account extends Base
         # 获取账号信息
         $findAccount = Db::name('account')->where('account', $account)->find();
 
+        $hold = [
+            'buy_num' => 0,
+            'buy_volume' => 0,
+            'sell_num' => 0,
+            'sell_volume' => 0,
+        ];
+
         # 获取账号持仓详细
         $where = [];
         $where[] = ['account', '=', $findAccount['account']];
         $where[] = ['is_close', '=', 0];
-        $selectSlice = Db::name('slice')->where($where)->order('create_date DESC')->select()->each(function($v){
+        $selectSlice = Db::name('slice')->where($where)->order('create_date DESC')->select()->each(function($v) use(&$hold){
             # 手续费计算
             $v['open_charge'] = calculate_profit_open($v['open_price']);
             # 持仓数量
             $v['slice_today'] = Db::name('slice_today')->where('account', $v['account'])->where('date', date('Y-m-d', strtotime($v['create_date'])))->find();
+            # 统计多空数量
+            if ($v['buy_or_sell'] == 'buy'){ $hold['buy_num']++; $hold['buy_volume'] += $v['volume']; }
+            if ($v['buy_or_sell'] == 'sell'){ $hold['sell_num']++; $hold['sell_volume'] += $v['volume']; }
             return $v;
         });
         $findAccount['slice_num_now'] = count($selectSlice);
@@ -129,6 +139,7 @@ class Account extends Base
         $data['month_day_profit'] = $monthSlice;
         $data['client_equity'] = $clientEquity;
         $data['slice_close_list_day'] = $sliceCLoseListDay;
+        $data['hold'] = $hold;
         return view('account/view', $data);
     }
 

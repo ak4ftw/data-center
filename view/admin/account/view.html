@@ -21,14 +21,26 @@
             <span class="title">账号名称: </span><b class="value">{$account.account}</b>
             <span class="title">账号: </span><b class="value">{$account.account_name}</b>
             <span class="title">初始化账号金额: </span><b class="value">{$account.balance}</b>
-            <span class="title">模式: </span><b class="value">固定每份手数{$slice_open_num}手</b>
-<!--            <span class="title">分仓金额: </span><b class="value">{$account.slice_margin}</b>-->
-            <span class="title">持仓: </span><b class="value">{$account.slice_num_now} / {$slice_num}</b>
+            <span class="title">模式: </span><b class="value">任务设置多空手数</b>
         </p>
     </div>
 
     <div style="margin-left: 30px">
         <h3>{$account.account} 持仓</h3>
+        <p>
+            <span class="title">总持份数: </span><b class="value">{$account.slice_num_now}</b>
+            <span class="title">总持手数: </span><b class="value">{$hold.buy_volume + $hold.sell_volume}</b>
+        </p>
+        <p>
+            <span class="title">buy </span>
+            <span class="title">持仓份数: </span><b class="value">{$hold.buy_num} / 15</b>
+            <span class="title">持仓手数: </span><b class="value">{$hold.buy_volume}</b>
+        </p>
+        <p>
+            <span class="title">sell </span>
+            <span class="title">持仓份数: </span><b class="value">{$hold.sell_num} / 15</b>
+            <span class="title">持仓手数: </span><b class="value">{$hold.sell_volume}</b>
+        </p>
         <table>
             <tr>
                 <th>id</th>
