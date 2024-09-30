@@ -454,19 +454,26 @@ class Account extends Base
 
         # 获取所有日期
         $sliceData = [];
-        Db::name('slice')->where('account', $findAccount['account'])->field(['create_date'])->order('create_date ASC')->group('create_date')->select()
+
+        $subQuery = Db::name('slice')->field('DATE(create_date) AS date')->where('account', $findAccount['account'])->order('create_date ASC')->buildSql();
+        Db::table($subQuery)
+            ->alias('date')
+            ->field(['date'])
+            ->order('date ASC')
+            ->group('date')
+            ->select()
             ->each(function($v) use($account, &$sliceData){
 
-                $date = $v['create_date'];
+                $date = $v['date'];
 
                 // 日期
                 $sliceData[$date]['date'] = $date;
 
                 // 做多
-                $sliceData[$date]['open_buy'] = Db::name('slice')->where(['account' => $account, 'buy_or_sell' => 'buy', 'create_date' => $date])->find();
+                $sliceData[$date]['open_buy'] = Db::name('slice')->where(['account' => $account, 'buy_or_sell' => 'buy'])->whereDay('create_date', $date)->fetchSql(0)->find();
 
                 // 做空
-                $sliceData[$date]['open_sell'] = Db::name('slice')->where(['account' => $account, 'buy_or_sell' => 'sell', 'create_date' => $date])->find();
+                $sliceData[$date]['open_sell'] = Db::name('slice')->where(['account' => $account, 'buy_or_sell' => 'sell'])->whereDay('create_date', $date)->find();
 
                 return $v;
             });
