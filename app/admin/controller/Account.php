@@ -444,6 +444,72 @@ class Account extends Base
         fclose($output);
     }
 
+    // 获取每日收益情况 20240930
+    public function download20240930(){
+        $account = input('account');
+
+        # 获取账号信息
+        $findAccount = Db::name('account')->where('account', $account)->find();
+        if (empty($findAccount)){ return '未找到账号'; }
+
+        # 获取所有日期
+        $sliceData = [];
+        Db::name('slice')->where('account', $findAccount['account'])->field(['create_date'])->order('create_date ASC')->group('create_date')->select()
+            ->each(function($v) use($account, &$sliceData){
+
+                $date = $v['create_date'];
+
+                // 日期
+                $sliceData[$date]['date'] = $date;
+
+                // 做多
+                $sliceData[$date]['open_buy'] = Db::name('slice')->where(['account' => $account, 'buy_or_sell' => 'buy', 'create_date' => $date])->find();
+
+                // 做空
+                $sliceData[$date]['open_sell'] = Db::name('slice')->where(['account' => $account, 'buy_or_sell' => 'sell', 'create_date' => $date])->find();
+
+                return $v;
+            });
+
+        # 下载
+        $filename = $findAccount['account'] . "_" . date('Ymd') . ".csv";
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        $output = fopen('php://output', 'w');
+        fwrite($output, "\xEF\xBB\xBF");
+        $csvField = [
+            '交易日期',
+            '开仓合约', '做空价格', '手数', '平仓时间', '平仓价格', '盈利情况', ' ',
+            '开仓合约', '做多价格', '手数', '平仓时间', '平仓价格', '盈利情况',
+        ];
+        fputcsv($output, $csvField);
+
+        foreach ($sliceData as $v) {
+            $need = [
+                dateTimeToDate($v['date']),
+
+                isset($v['open_sell'])?      $v['open_sell']['code']:         '-',
+                isset($v['open_sell'])?      $v['open_sell']['open_price']:         '-',
+                isset($v['open_sell'])?      $v['open_sell']['volume']:         '-',
+                isset($v['open_sell'])?      dateTimeToDate($v['open_sell']['close_date']):         '-',
+                isset($v['open_sell'])?      ($v['open_sell']['is_close'] == 0? '-':$v['open_sell']['close_price']):         '-',
+                isset($v['open_sell'])?      $v['open_sell']['is_close'] == 0? '-': (($v['open_sell']['open_price'] - $v['open_sell']['close_price']) * $v['open_sell']['volume'] * 10):         '-',
+
+                ' ',
+
+                isset($v['open_buy'])?      $v['open_buy']['code']:         '-',
+                isset($v['open_buy'])?      $v['open_buy']['open_price']:         '-',
+                isset($v['open_buy'])?      $v['open_buy']['volume']:         '-',
+                isset($v['open_buy'])?      dateTimeToDate($v['open_buy']['close_date']):         '-',
+                isset($v['open_buy'])?      ($v['open_buy']['is_close'] == 0? '-':$v['open_buy']['close_price']):         '-',
+                isset($v['open_buy'])?      $v['open_buy']['is_close'] == 0? '-': (($v['open_buy']['close_price'] - $v['open_buy']['open_price']) * $v['open_buy']['volume'] * 10):         '-',
+
+            ];
+            fputcsv($output, $need);
+        }
+        fclose($output);
+    }
+
     /**
      * @param string $year 年份
      * @param string $month 月份
