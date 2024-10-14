@@ -80,6 +80,11 @@ class Account extends Base
             return $v;
         });
 
+        # 获取账号真实持仓信息
+        $where = [];
+        $where[] = ['account', '=', $findAccount['account']];
+        $selectAccountPosition = Db::name('account_position')->where($where)->order('create_date DESC, buy_or_sell')->limit(10)->select();
+
 
         # display data 1
         $monthSlice = Account::getMonthSlice($account, date('Y'), date('m'));
@@ -132,6 +137,7 @@ class Account extends Base
 
         $data = [];
         $data['account'] = $findAccount;
+        $data['account_position'] = $selectAccountPosition;
         $data['slice'] = $selectSlice;
         $data['slice_is_close'] = $selectSliceIsClose;
         $data['slice_num'] = getKV('slice_num');

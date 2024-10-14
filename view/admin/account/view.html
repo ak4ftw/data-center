@@ -26,21 +26,53 @@
     </div>
 
     <div style="margin-left: 30px">
-        <h3>{$account.account} 持仓</h3>
-        <p>
-            <span class="title">总持份数: </span><b class="value">{$account.slice_num_now}</b>
-            <span class="title">总持手数: </span><b class="value">{$hold.buy_volume + $hold.sell_volume}</b>
-        </p>
-        <p>
-            <span class="title">buy </span>
-            <span class="title">持仓份数: </span><b class="value">{$hold.buy_num} / 15</b>
-            <span class="title">持仓手数: </span><b class="value">{$hold.buy_volume}</b>
-        </p>
-        <p>
-            <span class="title">sell </span>
-            <span class="title">持仓份数: </span><b class="value">{$hold.sell_num} / 15</b>
-            <span class="title">持仓手数: </span><b class="value">{$hold.sell_volume}</b>
-        </p>
+        <div>
+            <h3>真实持仓 (每日收盘后记录)</h3>
+            <table>
+                <tr>
+                    <th>代码</th>
+                    <th>方向</th>
+                    <th>数量</th>
+                    <th>今开</th>
+                    <th>今平</th>
+                    <th>保证金占用</th>
+                    <th>日期</th>
+                    <th>时间</th>
+                </tr>
+
+                {volist name="account_position" id="v5"}
+                <tr>
+                    <td>{$v5.code}.{$v5.exchange}</td>
+                    <td>{$v5.buy_or_sell}</td>
+                    <td>{$v5.position}</td>
+                    <td>{$v5.open_volume}</td>
+                    <td>{$v5.close_volume}</td>
+                    <td>{$v5.used_margin}</td>
+                    <td>{$v5.date}</td>
+                    <td>{$v5.create_date}</td>
+                </tr>
+                {/volist}
+            </table>
+        </div>
+
+        <div>
+            <h3>记录持仓</h3>
+            <p>
+                <span class="title">总持份数: </span><b class="value">{$account.slice_num_now}</b>
+                <span class="title">总持手数: </span><b class="value">{$hold.buy_volume + $hold.sell_volume}</b>
+            </p>
+            <p>
+                <span class="title">buy </span>
+                <span class="title">持仓份数: </span><b class="value">{$hold.buy_num} / 15</b>
+                <span class="title">持仓手数: </span><b class="value">{$hold.buy_volume}</b>
+            </p>
+            <p>
+                <span class="title">sell </span>
+                <span class="title">持仓份数: </span><b class="value">{$hold.sell_num} / 15</b>
+                <span class="title">持仓手数: </span><b class="value">{$hold.sell_volume}</b>
+            </p>
+        </div>
+
         <table>
             <tr>
                 <th>id</th>
