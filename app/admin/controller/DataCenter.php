@@ -53,6 +53,28 @@ class DataCenter extends Base
             }
         }
 
+        // 账户真实持仓
+        if (!empty($input['account_position'])){
+            foreach ($input['account_position'] as $v){
+                if (!Db::name('account_position')->where('account', $v['account'])->where('buy_or_sell', $v['buy_or_sell'])->where('date', $v['date'])->find()){
+                    $data = [
+                        'account' => $v['account'],
+                        'buy_or_sell' => $v['buy_or_sell'],
+                        'code' => $v['code'],
+                        'exchange' => $v['exchange'],
+                        'position' => $v['position'],
+                        'position_close' => $v['position_close'],
+                        'open_volume' => $v['open_volume'],
+                        'close_volume' => $v['close_volume'],
+                        'used_margin' => $v['used_margin'],
+                        'date' => $v['date'],
+                        'create_date' => $v['create_date'],
+                    ];
+                    Db::name('account_position')->data($data)->insert();
+                }
+            }
+        }
+
         // 开仓
         if (!empty($input['slice_open'])){
             foreach ($input['slice_open'] as $v){
