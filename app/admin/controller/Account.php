@@ -481,8 +481,13 @@ class Account extends Base
                 // 做空
                 $sliceData[$date]['open_sell'] = Db::name('slice')->where(['account' => $account, 'buy_or_sell' => 'sell'])->whereDay('create_date', $date)->find();
 
+                # 动态权益
+                $sliceData[$date]['client_equity'] = Db::name('account_day_client_equity')->where(['account' => $account])->whereDay('date', $date)->value('client_equity');
+
                 return $v;
             });
+
+
 
         # 下载
         $filename = $findAccount['account'] . "_" . date('Ymd') . ".csv";
@@ -493,7 +498,7 @@ class Account extends Base
         $csvField = [
             '交易日期',
             '开仓合约', '做空价格', '手数', '平仓时间', '平仓价格', '盈利情况', ' ',
-            '开仓合约', '做多价格', '手数', '平仓时间', '平仓价格', '盈利情况',
+            '开仓合约', '做多价格', '手数', '平仓时间', '平仓价格', '盈利情况', '动态权益',
         ];
         fputcsv($output, $csvField);
 
@@ -516,6 +521,8 @@ class Account extends Base
                 isset($v['open_buy'])?      dateTimeToDate($v['open_buy']['close_date']):         '-',
                 isset($v['open_buy'])?      ($v['open_buy']['is_close'] == 0? '-':$v['open_buy']['close_price']):         '-',
                 isset($v['open_buy'])?      $v['open_buy']['is_close'] == 0? '-': (($v['open_buy']['close_price'] - $v['open_buy']['open_price']) * $v['open_buy']['volume'] * 10):         '-',
+
+                isset($v['client_equity'])? number_format($v['client_equity'],2,'.',','):         '-',
 
             ];
             fputcsv($output, $need);
