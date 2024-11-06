@@ -477,16 +477,40 @@ class Account extends Base
 
                 // 做多
                 $sliceData[$date]['open_buy'] = Db::name('slice')->where(['account' => $account, 'buy_or_sell' => 'buy'])->whereDay('create_date', $date)->fetchSql(0)->find();
+                // 多放手数统计
+                $sliceData[$date]['open_buy_volume'] = Db::name('account_position')
+                    ->where(['account' => $account, 'buy_or_sell' => 'buy'])
+                    ->whereDay('date', $date)
+                    ->fetchSql(0)
+                    ->value('position');
+                //var_dump($sliceData[$date]['open_buy_volume']);
 
                 // 做空
                 $sliceData[$date]['open_sell'] = Db::name('slice')->where(['account' => $account, 'buy_or_sell' => 'sell'])->whereDay('create_date', $date)->find();
+                // 多放手数统计
+                $sliceData[$date]['open_sell_volume'] = Db::name('account_position')
+                    ->where(['account' => $account, 'buy_or_sell' => 'sell'])
+                    ->whereDay('date', $date)
+                    ->fetchSql(0)
+                    ->value('position');
 
-                # 动态权益
-                $sliceData[$date]['client_equity'] = Db::name('account_day_client_equity')->where(['account' => $account])->whereDay('date', $date)->value('client_equity');
+                // 动态权益
+                $clientEquity = Db::name('account_day_client_equity')->where(['account' => $account])->whereDay('date', $date)->value('client_equity');
+                // 出入金变化
+                $io = Db::name('io_balance')
+                    ->field("sum(balance) AS balance")
+                    ->where(['account' => $account])
+                    ->whereDay('date', $date)
+                    ->whereBetween('date', ['2024-01-01', $date])
+                    ->select();
+                $ioBalance = empty($io[0]['balance']) ? 0 : $io[0]['balance'];
+                $sliceData[$date]['io_balance'] = $ioBalance; // 出入金变化 用于补正动态权益变化
+
+                $ioBalance = -$ioBalance;
+                $sliceData[$date]['client_equity'] = $clientEquity + $ioBalance;
 
                 return $v;
             });
-
 
 
         # 下载
@@ -497,8 +521,8 @@ class Account extends Base
         fwrite($output, "\xEF\xBB\xBF");
         $csvField = [
             '交易日期',
-            '开仓合约', '做空价格', '手数', '平仓时间', '平仓价格', '盈利情况', ' ',
-            '开仓合约', '做多价格', '手数', '平仓时间', '平仓价格', '盈利情况', '动态权益',
+            '开仓合约', '做空价格', '手数', '空总手数', '平仓时间', '平仓价格', '盈利情况', ' ',
+            '开仓合约', '做多价格', '手数', '多总手数', '平仓时间', '平仓价格', '盈利情况', '动态权益',
         ];
         fputcsv($output, $csvField);
 
@@ -509,6 +533,7 @@ class Account extends Base
                 isset($v['open_sell'])?      $v['open_sell']['code']:         '-',
                 isset($v['open_sell'])?      $v['open_sell']['open_price']:         '-',
                 isset($v['open_sell'])?      $v['open_sell']['volume']:         '-',
+                isset($v['open_sell_volume'])?      $v['open_sell_volume']:         '-',
                 isset($v['open_sell'])?      dateTimeToDate($v['open_sell']['close_date']):         '-',
                 isset($v['open_sell'])?      ($v['open_sell']['is_close'] == 0? '-':$v['open_sell']['close_price']):         '-',
                 isset($v['open_sell'])?      $v['open_sell']['is_close'] == 0? '-': (($v['open_sell']['open_price'] - $v['open_sell']['close_price']) * $v['open_sell']['volume'] * 10):         '-',
@@ -518,6 +543,7 @@ class Account extends Base
                 isset($v['open_buy'])?      $v['open_buy']['code']:         '-',
                 isset($v['open_buy'])?      $v['open_buy']['open_price']:         '-',
                 isset($v['open_buy'])?      $v['open_buy']['volume']:         '-',
+                isset($v['open_buy_volume'])?      $v['open_buy_volume']:         '-',
                 isset($v['open_buy'])?      dateTimeToDate($v['open_buy']['close_date']):         '-',
                 isset($v['open_buy'])?      ($v['open_buy']['is_close'] == 0? '-':$v['open_buy']['close_price']):         '-',
                 isset($v['open_buy'])?      $v['open_buy']['is_close'] == 0? '-': (($v['open_buy']['close_price'] - $v['open_buy']['open_price']) * $v['open_buy']['volume'] * 10):         '-',
