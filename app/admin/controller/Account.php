@@ -522,7 +522,7 @@ class Account extends Base
         $csvField = [
             '交易日期',
             '开仓合约', '做空价格', '手数', '空总手数', '平仓时间', '平仓价格', '盈利情况', ' ',
-            '开仓合约', '做多价格', '手数', '多总手数', '平仓时间', '平仓价格', '盈利情况', '动态权益', '出入金',
+            '开仓合约', '做多价格', '手数', '多总手数', '平仓时间', '平仓价格', '盈利情况', '动态权益', // '出入金',
         ];
         fputcsv($output, $csvField);
 
@@ -549,7 +549,7 @@ class Account extends Base
                 isset($v['open_buy'])?      $v['open_buy']['is_close'] == 0? '-': (($v['open_buy']['close_price'] - $v['open_buy']['open_price']) * $v['open_buy']['volume'] * 10):         '-',
 
                 isset($v['client_equity'])? number_format($v['client_equity'],2,'.',','):         '-',
-                isset($v['io_balance'])? number_format($v['io_balance'],2,'.',','):         '-',
+                // isset($v['io_balance'])? number_format($v['io_balance'],2,'.',','):         '-',
 
             ];
             fputcsv($output, $need);
