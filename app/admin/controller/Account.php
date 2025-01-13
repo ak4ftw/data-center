@@ -442,7 +442,7 @@ class Account extends Base
                 $v['is_close'] == 0? '-': ($v['close_price']),
                 $v['is_close'] == 0? '-': ($v['close_price'] * $v['volume'] * 10),
                 $v['is_close'] == 0? '-': ($v['close_charge'] * $v['volume']),
-                $v['is_close'] == 0? '-': ($v['slice_profit_num'] * $v['volume']),
+                $v['is_close'] == 0? '-': ($v['slice_profit_num']),
 
             ];
             fputcsv($output, $need);
